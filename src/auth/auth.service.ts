@@ -6,7 +6,7 @@ import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library'
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-
+import { User } from './types/auth.type';
 @Injectable()
 export class AuthService {
   constructor(
@@ -16,19 +16,17 @@ export class AuthService {
   ) {}
 
   async signup(dto: SignUpDto) {
-    // hash password
     const password = await argon.hash(dto.password);
 
-    // save new user into db
     try {
-      const user = await this.prisma.user.create({
+      const user: User = await this.prisma.user.create({
         data: {
-          email: dto.email,
           name: dto.name,
+          email: dto.email,
           password,
         },
       });
-      // return the saved user
+
       return user;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -36,28 +34,23 @@ export class AuthService {
           throw new ForbiddenException('Credentials taken');
         }
       }
-      throw error; 
-    } 
-  } 
+      throw error;
+    }
+  }
 
   async login(dto: LoginDto) {
-    // find user by email
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
       },
     });
 
-    // if user doesn't exist, throw exceptions
     if (!user) throw new ForbiddenException('Credentials incorrect');
 
-    // compare password
     const passwordMatch = await argon.verify(user.password, dto.password);
 
-    // if password incorrect, throw error
     if (!passwordMatch) throw new ForbiddenException('Credentials incorrect');
 
-    // send back the user
     return this.signToken(user.id, user.email);
   }
 
@@ -81,5 +74,4 @@ export class AuthService {
       access_token: token,
     };
   }
-}
-}
+// eslint-disable-this-line @typescript-eslint/no-unused-vars
