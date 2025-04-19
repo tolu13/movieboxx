@@ -1,32 +1,32 @@
-import { ForbiddenException } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto, SignUpDto } from './dto';
 import * as argon from 'argon2';
 import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { User } from './types/auth.type';
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private config: ConfigService,
     private jwt: JwtService,
+    private config: ConfigService,
   ) {}
 
   async signup(dto: SignUpDto) {
+    // generate  the password hash
     const password = await argon.hash(dto.password);
-
+    // save the new user in db
     try {
-      const user: User = await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           name: dto.name,
           email: dto.email,
-          password,
+          password: password,
         },
       });
-
+      // return the saved user
       return user;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -38,24 +38,27 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto) {
+  async signin(dto: LoginDto) {
+    //find user by emaill
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
       },
     });
+    //if user doesnt eist throw exceptions
 
     if (!user) throw new ForbiddenException('Credentials incorrect');
-
+    // compare password
     const passwordMatch = await argon.verify(user.password, dto.password);
-
+    //if password incoreect throw error
     if (!passwordMatch) throw new ForbiddenException('Credentials incorrect');
+    //send back the user
 
     return this.signToken(user.id, user.email);
   }
 
   async signToken(
-    userId: number,
+    userId: string,
     email: string,
   ): Promise<{ access_token: string }> {
     const payload = {
@@ -63,7 +66,7 @@ export class AuthService {
       email,
     };
 
-    const secret = this.config.get('JWT_SECRET');
+    const secret = this.config.get<string>('JWT_SECRET');
 
     const token = await this.jwt.signAsync(payload, {
       expiresIn: '30m',
@@ -74,4 +77,4 @@ export class AuthService {
       access_token: token,
     };
   }
-// eslint-disable-this-line @typescript-eslint/no-unused-vars
+}
