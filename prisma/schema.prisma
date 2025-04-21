@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -28,9 +27,8 @@ model User {
 model Movie {
   id          String      @id @default(uuid())
   title       String
-  description String
+  description String      @db.Text
   posterUrl   String?
-  duration    Int         // in minutes
   genre       String
   rating      Float?
   showtimes   Showtime[]
@@ -43,6 +41,7 @@ model Theater {
   location String
   seats    Seat[]
   showtimes Showtime[]
+  status    String
 }
 
 model Showtime {

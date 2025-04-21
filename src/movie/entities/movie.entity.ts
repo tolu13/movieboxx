@@ -1,29 +1,22 @@
 import { Column, PrimaryGeneratedColumn } from 'typeorm';
-
-export enum Genre {
-  ACTION = 'action',
-  DRAMA = 'drama',
-  COMEDY = 'comedy',
-  HORROR = 'horror',
-  SCI_FI = 'sci-fi',
-}
+import { Genre } from '../enum/enum';
 
 export class MovieEntity {
   @PrimaryGeneratedColumn()
-  id: string;
+  id!: string;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column()
-  posterUrl: string;
+  posterUrl!: string;
 
   @Column()
-  description: string;
+  description!: string;
 
   @Column({
     type: 'enum',
     enum: Genre,
   })
-  genre: Genre;
+  genre!: Genre;
 }

@@ -1,15 +1,22 @@
-import { IsEnum, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { Genre } from '../enum/enum';
 
 export class CreateMovieDto {
   @IsString()
-  title: string;
+  title!: string;
 
   @IsString()
-  description: string;
+  description!: string;
 
   @IsString()
-  posterUrl: string;
+  posterUrl!: string;
 
   @IsEnum(Genre)
-  henre: Genre
+  genre!: Genre;
+
+  @IsOptional()
+  tmdbId!: number;
+
+  @IsOptional()
+  rating!: number;
 }
