@@ -36,7 +36,7 @@ export class MovieService {
     return this.prisma.movie.findMany();
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return this.prisma.movie.findFirst({
       where: { id: String(id) },
     });

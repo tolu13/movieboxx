@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto, SignUpDto } from './dto';
@@ -44,6 +45,9 @@ export class AuthService {
       where: {
         email: dto.email,
       },
+      include: {
+        bookings: true,
+      },
     });
     //if user doesnt eist throw exceptions
 
@@ -54,13 +58,14 @@ export class AuthService {
     if (!passwordMatch) throw new ForbiddenException('Credentials incorrect');
     //send back the user
 
-    return this.signToken(user.id, user.email);
+    return this.signToken(user.id, user.email, user);
   }
 
   async signToken(
     userId: string,
     email: string,
-  ): Promise<{ access_token: string }> {
+    user: any,
+  ): Promise<{ access_token: string; user: any }> {
     const payload = {
       sub: userId,
       email,
@@ -69,11 +74,13 @@ export class AuthService {
     const secret = this.config.get<string>('JWT_SECRET');
 
     const token = await this.jwt.signAsync(payload, {
-      expiresIn: '30m',
+      expiresIn: '60m',
       secret: secret,
     });
 
     return {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      user: { id: userId, email, name: user.name },
       access_token: token,
     };
   }
