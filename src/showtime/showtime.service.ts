@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateShowtimeDto } from './dto/create-showtime.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UpdateShowtimeDto } from './dto/update-showtime.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { ForbiddenException } from '@nestjs/common';

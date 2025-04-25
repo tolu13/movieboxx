@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateSeatDto } from './dto/create-seat.dto';
 import { UpdateSeatDto } from './dto/update-seat.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { Seat } from './types/type';
 
 @Injectable()
@@ -21,19 +26,52 @@ export class SeatService {
     return seat; // Returns a Seat, which matches the `Seat` type
   }
 
-  findAll() {
-    return this.prisma.seat.findMany();
+  async findAll(): Promise<Seat[]> {
+    return this.prisma.seat.findMany({
+      include: {
+        bookings: true,
+      },
+    });
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} seat`;
+  async findOne(id: string): Promise<Seat> {
+    const seat = await this.prisma.seat.findUnique({
+      where: { id },
+      include: {
+        bookings: true,
+      },
+    });
+    if (!seat) {
+      throw new NotFoundException(`Seat with ID ${id} not found`);
+    }
+    return seat;
+  }
+  async update(id: string, updateSeatDto: UpdateSeatDto): Promise<Seat> {
+    try {
+      const updatedSeat = await this.prisma.seat.update({
+        where: { id },
+        data: updateSeatDto,
+        include: {
+          bookings: true,
+        },
+      });
+      return updatedSeat;
+    } catch (error) {
+      throw new InternalServerErrorException(`Could not update seat ${id}`);
+    }
   }
 
-  update(id: string, updateSeatDto: UpdateSeatDto) {
-    return `This action updates a #${id} seat`;
-  }
+  async remove(id: string): Promise<{ success: boolean; message: string }> {
+    const seat = await this.prisma.seat.findUnique({ where: { id } });
+    if (!seat) {
+      throw new NotFoundException(`Seat with ID ${id} not found`);
+    }
 
-  remove(id: string) {
-    return `This action removes a #${id} seat`;
+    await this.prisma.seat.delete({ where: { id } });
+
+    return {
+      success: true,
+      message: `Seat with ID ${id} deleted successfully`,
+    };
   }
 }

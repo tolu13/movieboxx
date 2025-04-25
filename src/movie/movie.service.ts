@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
@@ -49,14 +49,17 @@ export class MovieService {
     });
   }
 
-  delete(id: number) {
+  async delete(id: string) {
     try {
-      return this.prisma.movie.delete({
-        where: { id: String(id) }, // Convert to string if id is a string in your Prisma schema
+      await this.prisma.movie.delete({
+        where: { id: String(id) },
       });
     } catch (error) {
-      if (error instanceof Error) {
-        throw new NotFoundException(`Movie with id ${id} not found`);
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Not Found`);
       }
       throw error;
     }
