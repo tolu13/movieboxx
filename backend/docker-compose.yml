@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: myysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: movieboxx
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: appsecret
+    ports:
+      - "3307:3306"   # left: host, right: container (optional fix)
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:
